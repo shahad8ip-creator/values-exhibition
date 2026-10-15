@@ -791,14 +791,8 @@ function renderVideo(i){
   if (v.type === "none"){
     box.appendChild(fallbackBlock(a, "سيُتاح العرض التعريفي لهذه الجهة قريبًا."));
   } else if (v.type === "drive" && allowEmbeds){
-    // Stream the original file into the browser's own player (no Drive overlay on top of the picture).
-    // If Drive refuses (quota, unsupported format), switch to Drive's embedded player instead.
-    const vid = document.createElement("video");
-    vid.controls = true; vid.playsInline = true; vid.preload = "metadata";
-    vid.src = "https://drive.usercontent.google.com/download?id=" + v.id + "&export=download&confirm=t#t=0.1";
-    vid.setAttribute("aria-label", "العرض التعريفي: " + a.name);
-    vid.addEventListener("error", () => { box.innerHTML = ""; box.appendChild(drivePlayer(v.id, a)); }, {once:true});
-    box.appendChild(vid);
+    // Drive refuses direct streaming to other sites (403 on cross-site requests), so use its own player.
+    box.appendChild(drivePlayer(v.id, a));
   } else if (v.type === "file"){
     const vid = document.createElement("video");
     vid.controls = true; vid.playsInline = true; vid.preload = "metadata"; vid.src = isExternal(v.url) ? v.url : v.url + "#t=0.1"; // #t shows the first frame on iPhone
