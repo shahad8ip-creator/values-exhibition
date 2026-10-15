@@ -31,7 +31,7 @@ window.EXHIBITION = {
     { name: "جمعية الشقائق الخيرية", logo: "assets/logos/shaqaeq.png", video: "https://drive.google.com/file/d/1VjFeg1c5Nzv6TWQkxsu_X_fpPL5k8f1Y/view", description: "" },
     { name: "جمعية تواد للتنمية الأسرية بالجوف", logo: "assets/logos/tawad.png", video: "https://drive.google.com/file/d/1wPLgu8gHLa6-787WMs3gGrV8rD8n9cBk/view", description: "" },
     { name: "جمعية التنمية الأهلية بأحد رفيدة", logo: "assets/logos/ahad-rufaidah.png", video: "https://drive.google.com/file/d/1KyMHa-Zv0zSWg3LHlRDk4Pnq9WTFrGB8/view", description: "" },
-    { name: "جمعية رواء للفتيات بتبوك", logo: "assets/logos/rawaa.png", video: "https://drive.google.com/file/d/1BU3fuhwKOPVXRgKVwzqCZriOy7xu4q9_/view", description: "" },
+    { name: "جمعية رواء للفتيات بتبوك", logo: "assets/logos/rawaa.png", video: "https://drive.google.com/file/d/1r9hGtJvLGGBxgiSZ2zgspxM8XVf9Co9R/view", description: "" },
     { name: "جمعية أفياء النسائية بمنطقة عسير", logo: "assets/logos/afyaa.png", video: "https://drive.google.com/file/d/1uy451mkrEdoZO2rxXcG8A_RZ6ELnTrGw/view", description: "" },
     { name: "جمعية التنمية الأهلية بأبها", logo: "assets/logos/abha.jpg", video: "https://drive.google.com/file/d/1YXxBzXrwsiPnpfmeLwzuenSMCPpvPjQd/view", description: "" },
     { name: "إيراق", logo: "assets/logos/eiraq.jpg", video: "https://drive.google.com/file/d/1LuqqxeiD_eTEhjEkjyzV-uUkmv2Le6kH/view", description: "" },
