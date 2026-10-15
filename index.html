@@ -1,0 +1,850 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>معرض وحدات تعزيز القيم</title>
+<meta name="description" content="رحلة رقمية ثلاثية الأبعاد للتعرّف على الجهات الست عشرة المشاركة في ملتقى تعزيز القيم.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
+<style>
+/* Layout: full-bleed 3D corridor canvas; landing copy and tour controls float over it as RTL layers.
+   Single light theme on purpose: the forum logo is set on white and the gallery is a lit, pale hall. */
+:root{
+  --teal:#1d8796;
+  --teal-deep:#0f5560;
+  --sand:#a5866a;
+  --sand-soft:#ece3d8;
+  --paper:#ffffff;
+  --mist:#f1f4f3;
+  --ink:#16292d;
+  --ink-soft:#56686c;
+  --scrim:rgba(9,32,37,.74);
+  --line:rgba(22,41,45,.12);
+  --font-display:"El Messiri","Noto Kufi Arabic","Geeza Pro","Segoe UI",Tahoma,sans-serif;
+  --font-body:"IBM Plex Sans Arabic","Geeza Pro","Segoe UI",Tahoma,sans-serif;
+  --shadow:0 18px 50px -18px rgba(15,85,96,.35);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--mist);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.7;overflow:hidden;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--teal);outline-offset:3px}
+img{max-width:100%}
+
+#scene{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;outline:none}
+body.touring #scene{cursor:grab}
+body.touring #scene.dragging{cursor:grabbing}
+body.touring #scene.hovering{cursor:pointer}
+
+/* ---------- Landing ---------- */
+#home{position:fixed;inset:0;z-index:20;display:flex;align-items:stretch;transition:opacity .7s ease,visibility .7s}
+#home::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(270deg,rgba(255,255,255,.97) 0%,rgba(255,255,255,.93) 38%,rgba(255,255,255,.55) 58%,rgba(255,255,255,0) 78%)}
+#home.leaving{opacity:0;visibility:hidden}
+.home-inner{position:relative;width:min(620px,100%);padding:max(28px,env(safe-area-inset-top)) clamp(20px,5vw,64px) max(24px,env(safe-area-inset-bottom));display:flex;flex-direction:column;justify-content:center;gap:clamp(12px,2vh,20px);overflow-y:auto;scrollbar-width:none}
+.home-inner::-webkit-scrollbar{display:none}
+.home-logo{width:min(420px,88%);height:auto;aspect-ratio:2.4;object-fit:cover;object-position:50% 50%;display:block;margin-inline-start:-6px}
+.eyebrow{font-size:.82rem;letter-spacing:.02em;color:var(--sand);font-weight:600;display:flex;align-items:center;gap:10px}
+.eyebrow::before{content:"";width:28px;height:1px;background:var(--sand)}
+h1{font-family:var(--font-display);font-weight:700;color:var(--teal-deep);font-size:clamp(2.1rem,5.2vw,3.5rem);line-height:1.25;margin:0;text-wrap:balance}
+.subtitle{font-family:var(--font-display);font-weight:500;color:var(--teal);font-size:clamp(1.15rem,2.3vw,1.45rem);margin:0;line-height:1.6;text-wrap:balance}
+.intro{margin:0;color:var(--ink-soft);max-width:44ch;font-size:1.02rem}
+.cta-row{display:flex;flex-wrap:wrap;align-items:center;gap:14px 20px;margin-top:6px}
+.btn-primary{border:0;border-radius:999px;background:var(--teal);color:#fff;font-family:var(--font-display);font-weight:600;font-size:1.2rem;padding:14px 30px 14px 26px;display:inline-flex;align-items:center;gap:12px;box-shadow:var(--shadow);transition:background .2s,transform .2s}
+.btn-primary:hover{background:var(--teal-deep);transform:translateY(-1px)}
+.btn-primary:disabled{opacity:.6;cursor:progress;transform:none}
+.btn-primary svg{width:22px;height:22px;transform:scaleX(-1)}
+.cta-note{font-size:.88rem;color:var(--ink-soft)}
+.cta-note b{color:var(--teal-deep);font-weight:600}
+.participants{border-top:1px solid var(--line);padding-top:14px;margin-top:4px}
+.participants h2{font-size:.82rem;font-weight:600;color:var(--sand);margin:0 0 10px}
+.logo-strip{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;max-width:460px}
+.logo-strip img{width:100%;aspect-ratio:1.2;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:8px;padding:3px}
+
+.partners{position:fixed;z-index:1;top:calc(env(safe-area-inset-top) + 18px);inset-inline-end:24px;display:flex;align-items:center;gap:18px}
+.partners img{height:46px;width:auto;display:block}
+
+/* ---------- Tour chrome ---------- */
+.chrome{position:fixed;z-index:10;transition:opacity .5s}
+body:not(.touring) .chrome{opacity:0;pointer-events:none}
+.topbar{top:0;inset-inline:0;padding:calc(env(safe-area-inset-top) + 12px) 16px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px;pointer-events:none}
+.topbar > *{pointer-events:auto}
+.brand{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:14px;padding:6px 14px 6px 8px;box-shadow:0 4px 18px -8px rgba(0,0,0,.25);min-width:0}
+.brand img{height:40px;width:auto;aspect-ratio:2.4;object-fit:cover;flex:none}
+.brand span{font-family:var(--font-display);font-weight:600;color:var(--teal-deep);font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tools{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.tool{display:inline-flex;align-items:center;gap:8px;border:0;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:12px;padding:9px 13px;font-size:.92rem;font-weight:500;color:var(--teal-deep);box-shadow:0 4px 18px -8px rgba(0,0,0,.25);min-height:44px}
+.tool:hover{background:#fff}
+.tool svg{width:20px;height:20px;flex:none}
+
+.dock{bottom:0;inset-inline:0;padding:12px 16px calc(env(safe-area-inset-bottom) + 14px);display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:none}
+.dock > *{pointer-events:auto}
+.focus-chip{display:flex;align-items:center;gap:12px;background:var(--paper);border-radius:16px;padding:8px 8px 8px 14px;box-shadow:var(--shadow);max-width:min(560px,100%);min-width:0}
+.focus-chip img{width:52px;height:44px;object-fit:contain;border-radius:8px;background:#fff;flex:none}
+.focus-chip .fc-text{min-width:0;display:flex;flex-direction:column;line-height:1.35}
+.focus-chip small{color:var(--sand);font-size:.78rem;font-variant-numeric:tabular-nums}
+.focus-chip strong{font-family:var(--font-display);color:var(--teal-deep);font-weight:600;font-size:1rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.focus-chip button{flex:none;border:0;border-radius:12px;background:var(--teal);color:#fff;padding:10px 16px;font-weight:600;display:inline-flex;gap:8px;align-items:center;min-height:44px}
+.focus-chip button svg{width:18px;height:18px}
+.pad{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.9);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:20px;padding:8px;box-shadow:0 6px 24px -10px rgba(0,0,0,.3);flex-wrap:nowrap;max-width:100%}
+.pad button{border:0;background:var(--mist);border-radius:14px;min-width:48px;min-height:48px;display:inline-flex;align-items:center;justify-content:center;gap:6px;color:var(--teal-deep);font-weight:600;font-size:.9rem;padding:0 12px;user-select:none;-webkit-user-select:none;touch-action:none}
+.pad button:hover{background:var(--sand-soft)}
+.pad button.active{background:var(--teal);color:#fff}
+.pad svg{width:22px;height:22px}
+.pad .sep{width:1px;align-self:stretch;background:var(--line);margin:4px 2px}
+.move-col{display:flex;flex-direction:column;gap:4px}
+.move-col button{min-height:40px}
+
+/* ---------- Drawer (associations list) ---------- */
+.drawer{position:fixed;z-index:30;top:0;bottom:0;inset-inline-start:0;width:min(400px,100%);background:var(--paper);box-shadow:-20px 0 60px -30px rgba(0,0,0,.4);display:flex;flex-direction:column;transform:translateX(105%);transition:transform .35s ease;padding-top:env(safe-area-inset-top)}
+.drawer.open{transform:none}
+.drawer header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 12px;border-bottom:1px solid var(--line)}
+.drawer h2{font-family:var(--font-display);margin:0;color:var(--teal-deep);font-size:1.3rem}
+.drawer ol{list-style:none;margin:0;padding:10px 12px calc(env(safe-area-inset-bottom) + 16px);overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+.drawer li button{width:100%;border:0;background:transparent;border-radius:12px;padding:8px 10px;display:grid;grid-template-columns:28px 64px 1fr;align-items:center;gap:12px;text-align:start}
+.drawer li button:hover,.drawer li button:focus-visible{background:var(--mist)}
+.drawer .num{font-family:var(--font-display);color:var(--sand);font-weight:600;font-variant-numeric:tabular-nums;text-align:center}
+.drawer li img{width:64px;height:50px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:8px}
+.drawer .nm{font-weight:500;line-height:1.45;min-width:0}
+.icon-btn{border:0;background:var(--mist);border-radius:12px;width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;color:var(--teal-deep)}
+.icon-btn svg{width:20px;height:20px}
+.backdrop{position:fixed;inset:0;z-index:25;background:rgba(9,32,37,.35);opacity:0;pointer-events:none;transition:opacity .3s}
+.backdrop.show{opacity:1;pointer-events:auto}
+
+/* ---------- Modals ---------- */
+.modal{position:fixed;inset:0;z-index:40;background:var(--scrim);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));opacity:0;pointer-events:none;transition:opacity .3s}
+.modal.show{opacity:1;pointer-events:auto}
+.card{background:var(--paper);border-radius:22px;width:min(920px,100%);max-height:100%;overflow-y:auto;box-shadow:0 30px 80px -20px rgba(0,0,0,.5);transform:translateY(12px) scale(.98);transition:transform .35s ease}
+.modal.show .card{transform:none}
+.card-head{display:flex;align-items:center;gap:14px;padding:16px 18px;border-bottom:1px solid var(--line)}
+.card-head img{width:74px;height:58px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:10px;flex:none}
+.card-head .t{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.4}
+.card-head small{color:var(--sand);font-weight:600;font-size:.82rem}
+.card-head h2{margin:0;font-family:var(--font-display);color:var(--teal-deep);font-size:clamp(1.1rem,2.6vw,1.45rem);font-weight:700;text-wrap:balance}
+.player{background:#0b1517;display:flex;align-items:center;justify-content:center;position:relative}
+.player video{display:block;width:100%;max-height:min(64vh,620px);background:#000}
+.player iframe{display:block;width:100%;aspect-ratio:16/9;border:0;max-height:64vh}
+.player-empty{width:100%;aspect-ratio:16/9;max-height:56vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;color:#e6eeee;background:radial-gradient(ellipse at center,#16434a 0%,#0b1517 75%)}
+.player-empty img{width:min(220px,46%);background:#fff;border-radius:14px;padding:10px;aspect-ratio:1.2;object-fit:contain}
+.player-empty p{margin:0;font-size:1rem;max-width:40ch}
+.player-empty a{color:#fff;background:var(--teal);border-radius:999px;padding:10px 20px;text-decoration:none;font-weight:600}
+.card-body{padding:14px 18px 6px}
+.card-body p{margin:0;color:var(--ink-soft);max-width:70ch}
+.card-body .ext{display:inline-block;margin-top:6px;color:var(--teal);font-weight:500}
+.card-foot{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 18px 18px}
+.card-foot .nav{display:flex;gap:8px}
+.btn-soft{border:0;background:var(--mist);color:var(--teal-deep);border-radius:12px;padding:10px 14px;font-weight:500;min-height:44px;display:inline-flex;align-items:center;gap:6px}
+.btn-soft:hover{background:var(--sand-soft)}
+.btn-close{border:0;background:var(--teal-deep);color:#fff;border-radius:12px;padding:10px 18px;font-weight:600;min-height:44px;display:inline-flex;align-items:center;gap:8px}
+.btn-close:hover{background:var(--teal)}
+.btn-soft svg,.btn-close svg{width:18px;height:18px}
+
+.help .card{width:min(560px,100%);padding:24px 24px 20px}
+.help h2{font-family:var(--font-display);color:var(--teal-deep);margin:0 0 4px;font-size:1.5rem}
+.help .lead{margin:0 0 14px;color:var(--ink-soft)}
+.help ul{margin:0 0 18px;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+.help li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start}
+.help kbd{font-family:var(--font-body);background:var(--mist);border:1px solid var(--line);border-bottom-width:2px;border-radius:7px;padding:1px 8px;font-size:.85rem;white-space:nowrap;display:inline-block;min-width:96px;text-align:center}
+.help .actions{display:flex;justify-content:flex-start}
+
+#nogl{position:fixed;inset:auto 16px 16px;z-index:50;background:var(--paper);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow)}
+
+@media (max-width: 760px){
+  #home::before{background:linear-gradient(180deg,rgba(255,255,255,.75) 0%,rgba(255,255,255,.94) 32%,rgba(255,255,255,.97) 100%)}
+  .home-inner{justify-content:flex-end;width:100%}
+  .partners{position:static;align-self:center;gap:16px;margin-bottom:auto}
+  .partners img{height:34px}
+  .home-logo{width:min(300px,80%);margin-inline:auto}
+  .tool .lbl{display:none}
+  .tool{padding:9px 11px}
+  .brand span{display:none}
+  .pad button .lbl{display:none}
+  .logo-strip{grid-template-columns:repeat(8,1fr)}
+}
+@media (max-height: 560px) and (orientation: landscape){
+  .participants{display:none}
+  .home-logo{width:240px}
+}
+@media (prefers-reduced-motion: reduce){
+  *{transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+
+<canvas id="scene" tabindex="0" aria-label="ممر المعرض ثلاثي الأبعاد"></canvas>
+
+<!-- Landing -->
+<section id="home" aria-labelledby="home-title">
+  <div class="home-inner">
+    <div class="partners">
+      <img src="assets/partners/masaq.png" alt="شعار شركة مساق التربوية للتأهيل">
+      <img src="assets/partners/alessa.png" alt="شعار مؤسسة عبداللطيف العيسى الخيرية">
+      <img src="assets/partners/taziz.png" alt="شعار تعزيز">
+    </div>
+    <img class="home-logo" src="assets/forum-logo.webp" alt="شعار ملتقى تعزيز القيم: قيمٌ تُبنى.. وأثرٌ يبقى" width="2000" height="1600">
+    <div class="eyebrow">المعرض الرقمي للملتقى</div>
+    <h1 id="home-title">«معرض وحدات تعزيز القيم»</h1>
+    <p class="subtitle">«ست عشرة جهة، وست عشرة نافذة للتعريف بصناع الأثر.»</p>
+    <p class="intro">«رحلة رقمية للتعرّف على الجهات المشاركة في ملتقى تعزيز القيم.»</p>
+    <div class="cta-row">
+      <button class="btn-primary" id="enter" disabled>
+        <span id="enter-label">جارٍ تجهيز المعرض…</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+    <div class="participants">
+      <h2>الجهات المشاركة</h2>
+      <div class="logo-strip" id="logo-strip"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Tour chrome -->
+<div class="chrome topbar">
+  <div class="brand"><img src="assets/forum-logo.webp" alt="شعار ملتقى تعزيز القيم"><span>معرض وحدات تعزيز القيم</span></div>
+  <div class="tools">
+    <button class="tool" id="btn-list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg><span class="lbl">قائمة الجهات</span></button>
+    <button class="tool" id="btn-help"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.4c-.6.3-1 .8-1 1.5v.6M12 17h.01"/></svg><span class="lbl">طريقة التجوّل</span></button>
+    <button class="tool" id="btn-reset"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span class="lbl">نقطة البداية</span></button>
+    <button class="tool" id="btn-fs" aria-label="ملء الشاشة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+  </div>
+</div>
+
+<div class="chrome dock">
+  <div class="focus-chip" id="focus-chip" hidden>
+    <img id="fc-logo" alt="">
+    <div class="fc-text"><small id="fc-num"></small><strong id="fc-name"></strong></div>
+    <button id="fc-play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>مشاهدة العرض</button>
+  </div>
+  <div class="pad" role="group" aria-label="أزرار التجوّل">
+    <button id="btn-prev" aria-label="الشاشة السابقة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg><span class="lbl">السابقة</span></button>
+    <span class="sep"></span>
+    <button data-hold="right" aria-label="التفات لليمين"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5.3M18 3v4h-4"/></svg></button>
+    <div class="move-col">
+      <button data-hold="fwd" aria-label="تقدّم للأمام"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
+      <button data-hold="back" aria-label="تراجع للخلف"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+    </div>
+    <button data-hold="left" aria-label="التفات لليسار"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 0 0-14-5.3M6 3v4h4"/></svg></button>
+    <span class="sep"></span>
+    <button id="btn-next" aria-label="الشاشة التالية"><span class="lbl">التالية</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+  </div>
+</div>
+
+<!-- Associations drawer -->
+<div class="backdrop" id="backdrop"></div>
+<aside class="drawer" id="drawer" aria-labelledby="drawer-title" aria-hidden="true">
+  <header>
+    <h2 id="drawer-title">الجهات المشاركة</h2>
+    <button class="icon-btn" id="drawer-close" aria-label="إغلاق القائمة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </header>
+  <ol id="assoc-list"></ol>
+</aside>
+
+<!-- Video modal -->
+<div class="modal" id="video-modal" role="dialog" aria-modal="true" aria-labelledby="vm-name" aria-hidden="true">
+  <div class="card">
+    <div class="card-head">
+      <img id="vm-logo" alt="">
+      <div class="t"><small id="vm-num"></small><h2 id="vm-name"></h2></div>
+      <button class="icon-btn" id="vm-x" aria-label="إغلاق العرض والعودة إلى المعرض"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="player" id="vm-player"></div>
+    <div class="card-body" id="vm-body"></div>
+    <div class="card-foot">
+      <div class="nav">
+        <button class="btn-soft" id="vm-prev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg><span class="lbl">السابقة</span></button>
+        <button class="btn-soft" id="vm-next"><span class="lbl">التالية</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+      </div>
+      <button class="btn-close" id="vm-close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7M5 10v10h14V10"/></svg>إغلاق والعودة إلى المعرض</button>
+    </div>
+  </div>
+</div>
+
+<!-- Help modal -->
+<div class="modal help" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title" aria-hidden="true">
+  <div class="card">
+    <h2 id="help-title">طريقة التجوّل في المعرض</h2>
+    <p class="lead">أمامك ممر فيه ست عشرة شاشة، ثماني شاشات على كل جانب. اختر أي شاشة لمشاهدة العرض التعريفي للجهة.</p>
+    <ul id="help-list"></ul>
+    <div class="actions"><button class="btn-primary" id="help-ok">فهمت، لنبدأ</button></div>
+  </div>
+</div>
+
+<div id="nogl" hidden>لا يدعم هذا الجهاز العرض ثلاثي الأبعاد. يمكنك مشاهدة العروض التعريفية للجهات كلها من <button class="btn-soft" id="nogl-list">قائمة الجهات</button></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="content.js"></script>
+<script>
+(function(){
+"use strict";
+document.documentElement.lang = "ar"; document.documentElement.dir = "rtl";
+
+/* ================= Data ================= */
+const CFG = window.EXHIBITION || {associations:[]};
+const ASSOC = (CFG.associations || []).slice(0,16);
+while (ASSOC.length < 16) ASSOC.push({name:"جهة مشاركة " + (ASSOC.length+1), logo:"", video:"", description:""});
+const N = 16;
+const AR = "٠١٢٣٤٥٦٧٨٩";
+const ar = n => String(n).replace(/\d/g, d => AR[d]);
+const numLabel = i => "الشاشة " + ar(i+1) + " من " + ar(N);
+
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const coarse = matchMedia("(pointer: coarse)").matches;
+
+let embedSetting = (CFG.settings || {}).embedExternalPlayers;
+const allowEmbeds = (embedSetting === true) || ((embedSetting === "auto" || embedSetting == null) && !/claude|anthropic/i.test(location.hostname));
+
+const $ = id => document.getElementById(id);
+
+/* ================= Landing strip & list ================= */
+const strip = $("logo-strip");
+ASSOC.forEach(a => { const im = new Image(); im.src = a.logo; im.alt = a.name; im.loading = "lazy"; strip.appendChild(im); });
+
+const list = $("assoc-list");
+ASSOC.forEach((a,i) => {
+  const li = document.createElement("li");
+  const b = document.createElement("button");
+  b.innerHTML = '<span class="num"></span><img alt=""><span class="nm"></span>';
+  b.querySelector(".num").textContent = ar(i+1);
+  b.querySelector("img").src = a.logo;
+  b.querySelector(".nm").textContent = a.name;
+  b.addEventListener("click", () => { closeDrawer(); goToScreen(i, true); });
+  li.appendChild(b); list.appendChild(li);
+});
+
+/* help list differs by input type */
+const helpItems = coarse ? [
+  ["اسحب بإصبعك", "للنظر حولك في المعرض."],
+  ["▲ ▼", "للتقدّم والتراجع في الممر، مع الضغط المستمر."],
+  ["السابقة / التالية", "للانتقال مباشرة من شاشة إلى أخرى."],
+  ["المس الشاشة", "لمشاهدة العرض التعريفي للجهة."]
+] : [
+  ["↑ ↓   W S", "للتقدّم والتراجع في الممر."],
+  ["← →   A D", "للالتفات يمينًا ويسارًا."],
+  ["اسحب بالفأرة", "للنظر حولك، وعجلة الفأرة للتقدّم والتراجع."],
+  ["انقر على الشاشة", "لمشاهدة العرض التعريفي للجهة. وزرّا السابقة والتالية للانتقال بين الشاشات."]
+];
+const hl = $("help-list");
+helpItems.forEach(([k,t]) => { const li = document.createElement("li"); li.innerHTML = "<kbd></kbd><span></span>"; li.querySelector("kbd").textContent = k; if (/^[↑←]/.test(k)) li.querySelector("kbd").dir = "ltr"; li.querySelector("span").textContent = t; hl.appendChild(li); });
+
+/* ================= Three.js scene ================= */
+let webgl = !!window.THREE;
+let renderer, scene, camera;
+const canvas = $("scene");
+try {
+  renderer = new THREE.WebGLRenderer({canvas, antialias:true, powerPreference:"high-performance"});
+} catch(e) { webgl = false; }
+
+const screens = []; // {group, screenMesh, halo, glow, frameMat, index, viewPos}
+const pick = [];
+
+/* Layout constants (metres) */
+const EYE = 1.6, ROW_GAP = 3.4, Z0 = -2.2, SIDE_X = 3.55, WALL_X = 4.9;
+const ANG = 24 * Math.PI / 180;
+const LAST_Z = Z0 - ROW_GAP*7;
+const END_Z = LAST_Z - 4.2;
+const START = {x:0, z:4.2, yaw:0, pitch:-0.02};
+const BOUND = {x:2.7, zMin:END_Z + 2.2, zMax:5.4};
+
+function makeCanvas(w,h){ const c = document.createElement("canvas"); c.width = w; c.height = h; return c; }
+function texFrom(c, repeat){
+  const t = new THREE.CanvasTexture(c);
+  t.encoding = THREE.sRGBEncoding;
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  if (repeat){ t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(repeat[0], repeat[1]); }
+  return t;
+}
+function loadImage(src){
+  return new Promise(res => { if(!src) return res(null); const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = src; });
+}
+function roundRect(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function cornerColor(img){
+  try { const c = makeCanvas(4,4), x = c.getContext("2d"); x.drawImage(img, 2,2,6,6, 0,0,4,4); const d = x.getImageData(1,1,1,1).data; return d[3] < 250 ? "#ffffff" : "rgb("+d[0]+","+d[1]+","+d[2]+")"; } catch(e){ return "#f6f7f7"; }
+}
+function wrapLines(ctx, text, maxW){
+  const words = text.split(/\s+/); const lines = []; let cur = "";
+  words.forEach(w => { const t = cur ? cur + " " + w : w; if (ctx.measureText(t).width > maxW && cur){ lines.push(cur); cur = w; } else cur = t; });
+  if (cur) lines.push(cur); return lines;
+}
+
+/* Generated textures */
+function floorTexture(){
+  const c = makeCanvas(1024,1024), x = c.getContext("2d");
+  x.fillStyle = "#e7e5e0"; x.fillRect(0,0,1024,1024);
+  for (let i=0;i<4000;i++){ x.fillStyle = "rgba(120,110,95,"+(Math.random()*0.035)+")"; x.fillRect(Math.random()*1024, Math.random()*1024, 2+Math.random()*6, 2+Math.random()*6); }
+  x.strokeStyle = "rgba(140,128,112,.28)"; x.lineWidth = 3;
+  for (let i=0;i<=1024;i+=512){ x.beginPath(); x.moveTo(i,0); x.lineTo(i,1024); x.stroke(); x.beginPath(); x.moveTo(0,i); x.lineTo(1024,i); x.stroke(); }
+  return texFrom(c, [6, 22]);
+}
+function runnerTexture(){
+  const c = makeCanvas(256,1024), x = c.getContext("2d");
+  x.fillStyle = "#1a6f7b"; x.fillRect(0,0,256,1024);
+  for (let i=0;i<2500;i++){ x.fillStyle = "rgba(255,255,255,"+(Math.random()*0.03)+")"; x.fillRect(Math.random()*256, Math.random()*1024, 1, 3); }
+  x.fillStyle = "#b99a7c"; x.fillRect(10,0,6,1024); x.fillRect(240,0,6,1024);
+  return texFrom(c, [1, 8]);
+}
+function radialTexture(inner, outer){
+  const c = makeCanvas(256,256), x = c.getContext("2d");
+  const g = x.createRadialGradient(128,128,0,128,128,128); g.addColorStop(0, inner); g.addColorStop(1, outer);
+  x.fillStyle = g; x.fillRect(0,0,256,256); return texFrom(c);
+}
+function haloTexture(){
+  const c = makeCanvas(256,384), x = c.getContext("2d");
+  x.filter = "blur(18px)"; x.fillStyle = "#3fc3d4"; roundRect(x, 40,40,176,304, 20); x.fill();
+  return texFrom(c);
+}
+
+const SW = 600, SH = 1050; // screen layout units (portrait)
+const TEX_K = coarse ? 1.3 : 1.7; // drawn at higher resolution so logos stay sharp up close
+function drawScreen(i, forumImg, logoImg){
+  const a = ASSOC[i];
+  const c = makeCanvas(Math.round(SW*TEX_K), Math.round(SH*TEX_K)), x = c.getContext("2d");
+  x.scale(TEX_K, TEX_K);
+  const bg = x.createLinearGradient(0,0,0,SH); bg.addColorStop(0,"#ffffff"); bg.addColorStop(1,"#f1f5f5");
+  x.fillStyle = bg; x.fillRect(0,0,SW,SH);
+  // forum logo (exact artwork, outer whitespace trimmed only)
+  if (forumImg){ const sx=110, sy=420, sw=1800, sh=790; const dw=330, dh=dw*sh/sw; x.drawImage(forumImg, sx,sy,sw,sh, (SW-dw)/2, 34, dw, dh); }
+  x.fillStyle = "#a5866a"; x.fillRect(SW/2-60, 196, 120, 2);
+  // association logo panel (logo only; names live in the list and video window)
+  const px=40, py=232, pw=SW-80, ph=SH-118-232-36;
+  x.save(); roundRect(x,px,py,pw,ph,22); x.fillStyle = logoImg ? cornerColor(logoImg) : "#eef2f2"; x.fill(); x.clip();
+  if (logoImg){
+    const s = Math.min((pw-24)/logoImg.width, (ph-24)/logoImg.height); const w = logoImg.width*s, h = logoImg.height*s;
+    x.imageSmoothingQuality = "high"; x.drawImage(logoImg, px+(pw-w)/2, py+(ph-h)/2, w, h);
+  } else {
+    x.fillStyle = "#8aa0a3"; x.font = '500 30px "IBM Plex Sans Arabic", Tahoma, sans-serif'; x.textAlign="center"; x.direction="rtl"; x.fillText("شعار الجهة", SW/2, py+ph/2+10);
+  }
+  x.restore();
+  roundRect(x,px,py,pw,ph,22); x.strokeStyle = "rgba(22,41,45,.10)"; x.lineWidth = 2; x.stroke();
+  x.direction = "rtl"; x.textAlign = "center";
+  // play band
+  x.fillStyle = "#1d8796"; x.fillRect(0, SH-118, SW, 118);
+  x.fillStyle = "#ffffff"; x.font = '600 32px "IBM Plex Sans Arabic", Tahoma, sans-serif';
+  const playLabel = "مشاهدة العرض التعريفي";
+  x.fillText(playLabel, SW/2 - 26, SH-48);
+  // play glyph (sits to the left of the RTL label)
+  const tw = x.measureText(playLabel).width; const cx = SW/2 - 26 - tw/2 - 34, cy = SH-59;
+  x.beginPath(); x.arc(cx,cy,22,0,Math.PI*2); x.strokeStyle="#fff"; x.lineWidth=3; x.stroke();
+  x.beginPath(); x.moveTo(cx-7,cy-11); x.lineTo(cx-7,cy+11); x.lineTo(cx+11,cy); x.closePath(); x.fill();
+  return c;
+}
+function friezeTexture(){
+  const c = makeCanvas(2048,128), x = c.getContext("2d");
+  x.fillStyle = "#ece3d8"; x.fillRect(0,0,2048,128);
+  x.fillStyle = "#a5866a"; x.fillRect(0,0,2048,3); x.fillRect(0,125,2048,3);
+  x.direction = "rtl"; x.textAlign = "center"; x.fillStyle = "#8a6d52"; x.font = '600 52px "El Messiri", Tahoma, sans-serif';
+  x.fillText("قيمٌ تُبنى.. وأثرٌ يبقى", 512, 84); x.fillText("قيمٌ تُبنى.. وأثرٌ يبقى", 1536, 84);
+  x.fillStyle = "#1d8796"; [0,1024].forEach(o => { x.beginPath(); x.arc(o+1024-0, 64, 6, 0, Math.PI*2); x.fill(); });
+  return texFrom(c, [1,1]);
+}
+
+async function buildScene(){
+  scene = new THREE.Scene();
+  const sky = new THREE.Color("#eef1f0");
+  scene.background = sky; scene.fog = new THREE.Fog(sky, 24, 70);
+  camera = new THREE.PerspectiveCamera(62, 1, 0.1, 90); camera.rotation.order = "YXZ";
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, coarse ? 1.5 : 1.75));
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xd8d0c4, 0.95));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.45); sun.position.set(2, 8, 4); scene.add(sun);
+
+  const len = BOUND.zMax + 2 - END_Z, midZ = (BOUND.zMax + 2 + END_Z)/2;
+  // floor + runner
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(WALL_X*2, len), new THREE.MeshLambertMaterial({map:floorTexture()}));
+  floor.rotation.x = -Math.PI/2; floor.position.set(0,0,midZ); scene.add(floor);
+  const runner = new THREE.Mesh(new THREE.PlaneGeometry(1.7, len-1.5), new THREE.MeshLambertMaterial({map:runnerTexture()}));
+  runner.rotation.x = -Math.PI/2; runner.position.set(0,0.005,midZ-0.75); scene.add(runner);
+  // walls
+  const wallMat = new THREE.MeshLambertMaterial({color:0xf7f7f5});
+  [-1,1].forEach(s => {
+    const w = new THREE.Mesh(new THREE.PlaneGeometry(len, 4.6), wallMat);
+    w.position.set(s*WALL_X, 2.3, midZ); w.rotation.y = -s*Math.PI/2; scene.add(w);
+    const skirt = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.14, len), new THREE.MeshLambertMaterial({color:0xa5866a}));
+    skirt.position.set(s*(WALL_X-0.02), 0.07, midZ); scene.add(skirt);
+    const fz = friezeTexture(); fz.wrapS = THREE.RepeatWrapping; fz.repeat.set(len/16, 1);
+    const frieze = new THREE.Mesh(new THREE.PlaneGeometry(len, 0.5), new THREE.MeshLambertMaterial({map:fz}));
+    frieze.position.set(s*(WALL_X-0.01), 3.65, midZ); frieze.rotation.y = -s*Math.PI/2; scene.add(frieze);
+  });
+  // ceiling with light strips
+  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(WALL_X*2, len), new THREE.MeshLambertMaterial({color:0xfbfbfa}));
+  ceil.rotation.x = Math.PI/2; ceil.position.set(0,4.6,midZ); scene.add(ceil);
+  const stripMat = new THREE.MeshBasicMaterial({color:0xffffff});
+  [-2.4, 0, 2.4].forEach(xp => { const s = new THREE.Mesh(new THREE.BoxGeometry(xp===0?0.5:0.18, 0.04, len-3), stripMat); s.position.set(xp,4.57,midZ); scene.add(s); });
+  const beamMat = new THREE.MeshLambertMaterial({color:0x1d8796});
+  for (let r=0;r<9;r++){ const b = new THREE.Mesh(new THREE.BoxGeometry(WALL_X*2, 0.08, 0.08), beamMat); b.position.set(0, 4.52, Z0 + ROW_GAP/2 - r*ROW_GAP + 0); scene.add(b); }
+
+  const forumImg = await loadImage("assets/forum-logo.webp");
+
+  // end wall with forum logo (exact artwork)
+  const end = new THREE.Mesh(new THREE.PlaneGeometry(WALL_X*2, 4.6), new THREE.MeshLambertMaterial({color:0xffffff}));
+  end.position.set(0, 2.3, END_Z); scene.add(end);
+  if (forumImg){
+    const t = new THREE.Texture(forumImg); t.encoding = THREE.sRGBEncoding; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); t.needsUpdate = true;
+    const lw = 6.4, lh = lw * forumImg.height / forumImg.width;
+    const logo = new THREE.Mesh(new THREE.PlaneGeometry(lw, lh), new THREE.MeshBasicMaterial({map:t, transparent:true, toneMapped:false}));
+    logo.position.set(0, 2.25, END_Z + 0.02); scene.add(logo);
+  }
+  // partner logos, small, in a row above the forum logo
+  const partnerImgs = (await Promise.all(["assets/partners/masaq.png","assets/partners/alessa.png","assets/partners/taziz.png"].map(loadImage))).filter(Boolean);
+  const PH = 0.62, GAP = 0.55;
+  const pw = partnerImgs.map(im => PH * im.width / im.height);
+  let px = (pw.reduce((s,w) => s + w, 0) + GAP*(pw.length-1)) / 2; // start at the right edge (RTL order)
+  partnerImgs.forEach((im, k) => {
+    const t = new THREE.Texture(im); t.encoding = THREE.sRGBEncoding; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); t.needsUpdate = true;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(pw[k], PH), new THREE.MeshBasicMaterial({map:t, transparent:true, toneMapped:false}));
+    m.position.set(px - pw[k]/2, 3.95, END_Z + 0.04); scene.add(m);
+    px -= pw[k] + GAP;
+  });
+  // back wall behind entrance
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(WALL_X*2, 4.6), new THREE.MeshLambertMaterial({color:0xf3f1ee}));
+  back.position.set(0,2.3,BOUND.zMax+2); back.rotation.y = Math.PI; scene.add(back);
+
+  // screens
+  const haloTex = haloTexture();
+  const glowTex = radialTexture("rgba(63,195,212,0.55)", "rgba(63,195,212,0)");
+  const shadowTex = radialTexture("rgba(20,30,30,0.35)", "rgba(20,30,30,0)");
+  const logos = await Promise.all(ASSOC.map(a => loadImage(a.logo)));
+  const bezelGeo = new THREE.BoxGeometry(1.44, 2.38, 0.12);
+  const plinthGeo = new THREE.BoxGeometry(1.1, 0.56, 0.5);
+  const screenGeo = new THREE.PlaneGeometry(1.28, 2.24);
+
+  for (let i=0;i<N;i++){
+    const row = Math.floor(i/2), side = (i % 2 === 0) ? 1 : -1; // first of each pair on the right (RTL reading)
+    const theta = side * -(Math.PI/2 - ANG);
+    const g = new THREE.Group();
+    g.position.set(side*SIDE_X, 0, Z0 - row*ROW_GAP); g.rotation.y = theta;
+
+    const plinth = new THREE.Mesh(plinthGeo, new THREE.MeshStandardMaterial({color:0x26302f, roughness:.6, metalness:.2}));
+    plinth.position.y = 0.28; g.add(plinth);
+    const frameMat = new THREE.MeshStandardMaterial({color:0x1b2324, roughness:.35, metalness:.45, emissive:0x1d8796, emissiveIntensity:0});
+    const bezel = new THREE.Mesh(bezelGeo, frameMat); bezel.position.y = 0.56 + 1.19; g.add(bezel);
+    const tex = texFrom(drawScreen(i, forumImg, logos[i]));
+    const scr = new THREE.Mesh(screenGeo, new THREE.MeshBasicMaterial({map:tex, toneMapped:false}));
+    scr.position.set(0, bezel.position.y, 0.061); g.add(scr);
+    const accent = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.02, 0.52), new THREE.MeshBasicMaterial({color:0x1d8796}));
+    accent.position.y = 0.565; g.add(accent);
+    const halo = new THREE.Mesh(new THREE.PlaneGeometry(2.1, 3.15), new THREE.MeshBasicMaterial({map:haloTex, transparent:true, opacity:0, depthWrite:false, blending:THREE.AdditiveBlending}));
+    halo.position.set(0, bezel.position.y, -0.08); g.add(halo);
+    const glow = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.2), new THREE.MeshBasicMaterial({map:glowTex, transparent:true, opacity:.22, depthWrite:false}));
+    glow.rotation.x = -Math.PI/2; glow.position.set(0, 0.012, 0.95); g.add(glow);
+    const sh = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 1.1), new THREE.MeshBasicMaterial({map:shadowTex, transparent:true, depthWrite:false}));
+    sh.rotation.x = -Math.PI/2; sh.position.set(0, 0.011, 0); g.add(sh);
+    scene.add(g);
+
+    scr.userData.index = i; bezel.userData.index = i; pick.push(scr, bezel);
+    const n = new THREE.Vector3(Math.sin(theta), 0, Math.cos(theta));
+    screens.push({group:g, halo, glow, frameMat, n, theta, get view(){
+      const d = camera.aspect < 0.8 ? 3.4 : 2.55; // step further back on portrait phones
+      return {x: g.position.x + n.x*d, z: g.position.z + n.z*d, yaw: theta, pitch: camera.aspect < 0.8 ? 0.1 : 0.06};
+    }, hv:0});
+  }
+}
+
+/* ================= Camera state & motion ================= */
+const st = {x:START.x, z:START.z, yaw:START.yaw, pitch:START.pitch, speed:0, push:0};
+const keys = {fwd:false, back:false, left:false, right:false};
+let mode = "home"; // home | tour | modal
+let tween = null, hoverIdx = -1, selectedIdx = -1, focusIdx = -1;
+
+const ease = t => t<.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
+function angDiff(a,b){ let d = (b - a) % (Math.PI*2); if (d > Math.PI) d -= Math.PI*2; if (d < -Math.PI) d += Math.PI*2; return d; }
+function tweenTo(target, ms, done){
+  const from = {x:st.x, z:st.z, yaw:st.yaw, pitch:st.pitch};
+  const dy = angDiff(from.yaw, target.yaw);
+  if (reduceMotion) ms = 1;
+  const dist = Math.hypot(target.x-from.x, target.z-from.z);
+  ms = ms || Math.min(2200, 700 + dist*110);
+  tween = {from, to:target, dy, t0:performance.now(), ms, done};
+  st.speed = 0;
+}
+
+function clampPos(){
+  st.x = Math.max(-BOUND.x, Math.min(BOUND.x, st.x));
+  st.z = Math.max(BOUND.zMin, Math.min(BOUND.zMax, st.z));
+  st.pitch = Math.max(-0.45, Math.min(0.4, st.pitch));
+}
+
+const clock = webgl ? new THREE.Clock() : null;
+let tHome = 0;
+function frame(){
+  requestAnimationFrame(frame);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  if (tween){
+    const p = Math.min(1, (performance.now() - tween.t0)/tween.ms), e = ease(p);
+    st.x = tween.from.x + (tween.to.x - tween.from.x)*e;
+    st.z = tween.from.z + (tween.to.z - tween.from.z)*e;
+    st.yaw = tween.from.yaw + tween.dy*e;
+    st.pitch = tween.from.pitch + (tween.to.pitch - tween.from.pitch)*e;
+    if (p >= 1){ const d = tween.done; tween = null; d && d(); }
+  } else if (mode === "tour"){
+    const turn = (keys.left?1:0) - (keys.right?1:0);
+    st.yaw += turn * 1.35 * dt;
+    const mv = (keys.fwd?1:0) - (keys.back?1:0);
+    st.speed += (mv*2.8 - st.speed) * Math.min(1, dt*5);
+    const v = st.speed + st.push; st.push *= Math.pow(0.02, dt);
+    if (Math.abs(v) > 0.001){ st.x += -Math.sin(st.yaw)*v*dt; st.z += -Math.cos(st.yaw)*v*dt; if (focusIdx>=0 && (mv||Math.abs(st.push)>.3)) setFocus(-1); }
+    clampPos();
+  } else if (mode === "home" && !reduceMotion){
+    tHome += dt; st.yaw = Math.sin(tHome*0.18)*0.07; st.x = Math.sin(tHome*0.11)*0.25;
+  }
+  camera.position.set(st.x, EYE, st.z);
+  camera.rotation.set(st.pitch, st.yaw, 0);
+
+  screens.forEach((s,i) => {
+    const target = i === selectedIdx ? 1 : (i === focusIdx ? .75 : (i === hoverIdx ? .55 : 0));
+    s.hv += (target - s.hv) * Math.min(1, dt*8);
+    s.halo.material.opacity = s.hv * 0.9;
+    s.frameMat.emissiveIntensity = s.hv * 0.9;
+    s.glow.material.opacity = 0.22 + s.hv*0.5;
+  });
+  renderer.render(scene, camera);
+}
+
+function resize(){
+  if (!webgl) return;
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w/h;
+  camera.fov = w/h < 0.8 ? 74 : 62; // wider view on portrait phones
+  camera.updateProjectionMatrix();
+}
+
+/* ================= Picking & input ================= */
+const ray = webgl ? new THREE.Raycaster() : null;
+const ndc = webgl ? new THREE.Vector2() : null;
+function pickAt(cx, cy){
+  const r = canvas.getBoundingClientRect();
+  ndc.set(((cx - r.left)/r.width)*2-1, -((cy - r.top)/r.height)*2+1);
+  ray.setFromCamera(ndc, camera);
+  const hit = ray.intersectObjects(pick, false)[0];
+  return hit && hit.distance < 30 ? hit.object.userData.index : -1;
+}
+
+let drag = null;
+canvas.addEventListener("pointerdown", e => {
+  if (mode !== "tour") return;
+  drag = {id:e.pointerId, x:e.clientX, y:e.clientY, yaw:st.yaw, pitch:st.pitch, moved:false};
+  canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener("pointermove", e => {
+  if (mode !== "tour") return;
+  if (drag && drag.id === e.pointerId){
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (!drag.moved && Math.hypot(dx,dy) > 6){ drag.moved = true; tween = null; canvas.classList.add("dragging"); }
+    if (drag.moved){
+      const k = coarse ? 0.0055 : 0.0042;
+      st.yaw = drag.yaw + dx*k; st.pitch = drag.pitch + dy*k*0.8; clampPos();
+    }
+  } else if (e.pointerType === "mouse"){
+    hoverIdx = pickAt(e.clientX, e.clientY);
+    canvas.classList.toggle("hovering", hoverIdx >= 0);
+  }
+});
+function endDrag(e){
+  if (!drag || drag.id !== e.pointerId) return;
+  const wasClick = !drag.moved; drag = null; canvas.classList.remove("dragging");
+  if (wasClick && e.type === "pointerup"){ const i = pickAt(e.clientX, e.clientY); if (i >= 0) goToScreen(i, true); }
+}
+canvas.addEventListener("pointerup", endDrag);
+canvas.addEventListener("pointercancel", endDrag);
+canvas.addEventListener("pointerleave", () => { hoverIdx = -1; canvas.classList.remove("hovering"); });
+canvas.addEventListener("wheel", e => {
+  if (mode !== "tour") return; e.preventDefault(); tween = null;
+  st.push = Math.max(-6, Math.min(6, st.push - Math.sign(e.deltaY) * 1.6));
+}, {passive:false});
+
+const KEYMAP = {KeyW:"fwd", ArrowUp:"fwd", KeyS:"back", ArrowDown:"back", KeyA:"left", ArrowLeft:"left", KeyD:"right", ArrowRight:"right"};
+window.addEventListener("keydown", e => {
+  if (e.key === "Escape"){ if (mode === "modal") closeVideo(); else if (drawerOpen) closeDrawer(); else if (helpOpen) closeHelp(); return; }
+  if (mode !== "tour" || drawerOpen || helpOpen) return;
+  if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+  const k = KEYMAP[e.code];
+  if (k){ keys[k] = true; tween = null; e.preventDefault(); }
+  if ((e.key === "Enter" || e.key === " ") && focusIdx >= 0 && e.target === canvas){ openVideo(focusIdx); e.preventDefault(); }
+});
+window.addEventListener("keyup", e => { const k = KEYMAP[e.code]; if (k) keys[k] = false; });
+window.addEventListener("blur", () => { Object.keys(keys).forEach(k => keys[k] = false); });
+
+/* on-screen hold buttons */
+document.querySelectorAll("[data-hold]").forEach(b => {
+  const k = b.dataset.hold;
+  const on = e => { e.preventDefault(); keys[k] = true; tween = null; b.classList.add("active"); try{ b.setPointerCapture(e.pointerId); }catch(_){} };
+  const off = () => { keys[k] = false; b.classList.remove("active"); };
+  b.addEventListener("pointerdown", on);
+  b.addEventListener("pointerup", off); b.addEventListener("pointercancel", off); b.addEventListener("lostpointercapture", off);
+  b.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " "){ keys[k] = true; b.classList.add("active"); e.preventDefault(); } });
+  b.addEventListener("keyup", off);
+  b.addEventListener("contextmenu", e => e.preventDefault());
+});
+
+/* ================= Screen focus & navigation ================= */
+function setFocus(i){
+  focusIdx = i;
+  const chip = $("focus-chip");
+  if (i < 0){ chip.hidden = true; return; }
+  $("fc-logo").src = ASSOC[i].logo; $("fc-num").textContent = numLabel(i); $("fc-name").textContent = ASSOC[i].name;
+  chip.hidden = false;
+}
+function goToScreen(i, thenOpen){
+  if (!webgl){ if (thenOpen) openVideo(i); return; }
+  selectedIdx = thenOpen ? i : -1;
+  setFocus(i);
+  tweenTo(screens[i].view, 0, () => { if (thenOpen) openVideo(i); });
+}
+function nearestScreen(){
+  let best = 0, bd = 1e9;
+  screens.forEach((s,i) => { const d = Math.hypot(s.view.x - st.x, s.view.z - st.z); if (d < bd){ bd = d; best = i; } });
+  return {i:best, d:bd};
+}
+$("btn-next").addEventListener("click", () => {
+  let i; if (focusIdx >= 0) i = (focusIdx + 1) % N; else { const n = nearestScreen(); i = (st.z > Z0 + 1) ? 0 : (n.d < 1.5 ? (n.i+1)%N : n.i); }
+  goToScreen(i, false);
+});
+$("btn-prev").addEventListener("click", () => {
+  let i; if (focusIdx >= 0) i = (focusIdx - 1 + N) % N; else { const n = nearestScreen(); i = (st.z > Z0 + 1) ? N-1 : (n.d < 1.5 ? (n.i-1+N)%N : n.i); }
+  goToScreen(i, false);
+});
+$("fc-play").addEventListener("click", () => { if (focusIdx >= 0){ selectedIdx = focusIdx; openVideo(focusIdx); } });
+$("btn-reset").addEventListener("click", () => { selectedIdx = -1; setFocus(-1); tweenTo({x:0, z:START.z - 1.2, yaw:0, pitch:START.pitch}, 0); });
+$("btn-fs").addEventListener("click", () => {
+  try {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else { const p = document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); p && p.catch && p.catch(()=>{}); }
+  } catch(e){}
+});
+if (!document.documentElement.requestFullscreen) $("btn-fs").hidden = true;
+
+/* ================= Drawer & help ================= */
+let drawerOpen = false, helpOpen = false, lastFocus = null;
+function openDrawer(){ drawerOpen = true; $("drawer").classList.add("open"); $("drawer").setAttribute("aria-hidden","false"); $("backdrop").classList.add("show"); setTimeout(()=>$("drawer-close").focus(), 50); }
+function closeDrawer(){ drawerOpen = false; $("drawer").classList.remove("open"); $("drawer").setAttribute("aria-hidden","true"); $("backdrop").classList.remove("show"); }
+$("btn-list").addEventListener("click", openDrawer);
+$("drawer-close").addEventListener("click", closeDrawer);
+$("backdrop").addEventListener("click", closeDrawer);
+$("nogl-list").addEventListener("click", openDrawer);
+
+function openHelp(){ helpOpen = true; lastFocus = document.activeElement; const m = $("help-modal"); m.classList.add("show"); m.setAttribute("aria-hidden","false"); setTimeout(()=>$("help-ok").focus(), 50); }
+function closeHelp(){ helpOpen = false; const m = $("help-modal"); m.classList.remove("show"); m.setAttribute("aria-hidden","true"); (lastFocus && lastFocus.focus) ? lastFocus.focus() : canvas.focus(); }
+$("btn-help").addEventListener("click", openHelp);
+$("help-ok").addEventListener("click", closeHelp);
+$("help-modal").addEventListener("click", e => { if (e.target.id === "help-modal") closeHelp(); });
+
+/* ================= Video modal ================= */
+function parseVideo(url){
+  url = (url || "").trim();
+  if (!url) return {type:"none"};
+  let m = url.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([\w-]{11})/);
+  if (m) return {type:"youtube", id:m[1], url};
+  m = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if (m) return {type:"vimeo", id:m[1], url};
+  m = url.match(/drive\.google\.com\/(?:file\/d\/|open\?(?:.*&)?id=|uc\?(?:.*&)?id=)([\w-]{20,})/);
+  if (m) return {type:"drive", id:m[1], url};
+  return {type:"file", url};
+}
+const isExternal = u => /^https?:\/\//i.test(u || "");
+let current = -1;
+
+function fallbackBlock(a, msg, link, linkLabel){
+  const d = document.createElement("div"); d.className = "player-empty";
+  if (a.logo){ const im = new Image(); im.src = a.logo; im.alt = ""; d.appendChild(im); }
+  const p = document.createElement("p"); p.textContent = msg; d.appendChild(p);
+  if (link){ const l = document.createElement("a"); l.href = link; l.target = "_blank"; l.rel = "noopener"; l.textContent = linkLabel; d.appendChild(l); }
+  return d;
+}
+function renderVideo(i){
+  const a = ASSOC[i], v = parseVideo(a.video), box = $("vm-player");
+  box.innerHTML = "";
+  if (v.type === "none"){
+    box.appendChild(fallbackBlock(a, "سيُتاح العرض التعريفي لهذه الجهة قريبًا."));
+  } else if (v.type === "file"){
+    const vid = document.createElement("video");
+    vid.controls = true; vid.playsInline = true; vid.preload = "metadata"; vid.src = v.url;
+    vid.setAttribute("aria-label", "العرض التعريفي: " + a.name);
+    vid.addEventListener("error", () => { box.innerHTML = ""; box.appendChild(fallbackBlock(a, "تعذّر تشغيل العرض داخل الصفحة.", isExternal(v.url) ? v.url : null, "فتح العرض في نافذة جديدة")); }, {once:true});
+    box.appendChild(vid);
+  } else if (allowEmbeds){
+    const f = document.createElement("iframe");
+    f.src = v.type === "youtube" ? "https://www.youtube-nocookie.com/embed/" + v.id + "?rel=0&playsinline=1"
+          : v.type === "drive" ? "https://drive.google.com/file/d/" + v.id + "/preview"
+          : "https://player.vimeo.com/video/" + v.id;
+    f.title = "العرض التعريفي: " + a.name;
+    f.allow = "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen";
+    f.allowFullscreen = true;
+    box.appendChild(f);
+  } else {
+    box.appendChild(fallbackBlock(a, "هذا العرض التعريفي متاح على " + ({youtube:"يوتيوب", vimeo:"Vimeo", drive:"Google Drive"}[v.type]) + ". اضغط الزر لمشاهدته في نافذة جديدة، ثم عُد إلى المعرض.", v.url, "مشاهدة العرض"));
+  }
+  const body = $("vm-body"); body.innerHTML = "";
+  if (a.description){ const p = document.createElement("p"); p.textContent = a.description; body.appendChild(p); }
+  if (isExternal(a.video) && (v.type === "file" || allowEmbeds)){
+    const l = document.createElement("a"); l.className = "ext"; l.href = a.video; l.target = "_blank"; l.rel = "noopener"; l.textContent = "فتح العرض في نافذة جديدة"; body.appendChild(l);
+  }
+  body.hidden = !body.childNodes.length;
+}
+function stopVideo(){ const box = $("vm-player"); box.querySelectorAll("video").forEach(v => { v.pause(); v.removeAttribute("src"); v.load(); }); box.innerHTML = ""; }
+function openVideo(i){
+  current = i; selectedIdx = i; setFocus(i);
+  const a = ASSOC[i];
+  $("vm-logo").src = a.logo; $("vm-logo").alt = "شعار " + a.name;
+  $("vm-num").textContent = numLabel(i); $("vm-name").textContent = a.name;
+  stopVideo(); renderVideo(i);
+  if (mode !== "modal"){ lastFocus = document.activeElement; }
+  mode = "modal"; Object.keys(keys).forEach(k => keys[k] = false);
+  const m = $("video-modal"); m.classList.add("show"); m.setAttribute("aria-hidden","false");
+  setTimeout(() => $("vm-close").focus(), 60);
+}
+function closeVideo(){
+  stopVideo();
+  const m = $("video-modal"); m.classList.remove("show"); m.setAttribute("aria-hidden","true");
+  mode = "tour"; selectedIdx = -1;
+  canvas.focus({preventScroll:true});
+}
+function stepVideo(d){
+  const i = (current + d + N) % N;
+  if (webgl){ tween = null; const v = screens[i].view; st.x = v.x; st.z = v.z; st.yaw = v.yaw; st.pitch = v.pitch; }
+  openVideo(i);
+}
+$("vm-close").addEventListener("click", closeVideo);
+$("vm-x").addEventListener("click", closeVideo);
+$("vm-next").addEventListener("click", () => stepVideo(1));
+$("vm-prev").addEventListener("click", () => stepVideo(-1));
+$("video-modal").addEventListener("click", e => { if (e.target.id === "video-modal") closeVideo(); });
+
+/* ================= Enter ================= */
+function enter(){
+  document.body.classList.add("touring");
+  $("home").classList.add("leaving");
+  setTimeout(() => { $("home").hidden = true; }, 750);
+  mode = "tour";
+  if (!webgl){ $("nogl").hidden = false; openDrawer(); return; }
+  tweenTo({x:0, z:START.z - 1.2, yaw:0, pitch:START.pitch}, 1600, () => { canvas.focus({preventScroll:true}); });
+  let seen = false; try { seen = localStorage.getItem("vee-help-seen") === "1"; } catch(e){}
+  if (!seen){ setTimeout(openHelp, reduceMotion ? 50 : 1300); try { localStorage.setItem("vee-help-seen","1"); } catch(e){} }
+}
+$("enter").addEventListener("click", enter);
+
+function ready(){ const b = $("enter"); b.disabled = false; $("enter-label").textContent = "ابدأ رحلة المعرض"; }
+
+window.addEventListener("resize", resize);
+
+if (webgl){
+  const fontsReady = (document.fonts && document.fonts.load) ? Promise.all([
+    document.fonts.load('700 46px "El Messiri"'), document.fonts.load('600 26px "El Messiri"'), document.fonts.load('600 32px "IBM Plex Sans Arabic"')
+  ]).catch(()=>{}) : Promise.resolve();
+  const timeout = new Promise(r => setTimeout(r, 2500));
+  Promise.race([fontsReady, timeout]).then(buildScene).then(() => {
+    resize(); frame(); ready();
+  }).catch(err => { console.error(err); webgl = false; ready(); });
+} else {
+  ready();
+}
+})();
+</script>
+</body>
+</html>
