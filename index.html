@@ -169,7 +169,7 @@ body:not(.touring) .chrome{opacity:0;pointer-events:none}
    sit below the picture instead of covering it; short landscape screens go full screen. */
 @media (max-width: 760px){
   #video-modal{padding:max(10px,env(safe-area-inset-top)) 10px max(10px,env(safe-area-inset-bottom))}
-  #video-modal .player iframe{aspect-ratio:auto;height:min(calc(56.25vw + 150px),68vh);max-height:none}
+  #video-modal .player iframe.drive-frame{aspect-ratio:auto;height:min(calc(56.25vw + 150px),68vh);max-height:none}
 }
 @media (max-height: 560px) and (orientation: landscape){
   #video-modal{padding:0}
@@ -777,16 +777,33 @@ function fallbackBlock(a, msg, link, linkLabel){
   if (link){ const l = document.createElement("a"); l.href = link; l.target = "_blank"; l.rel = "noopener"; l.textContent = linkLabel; d.appendChild(l); }
   return d;
 }
+function drivePlayer(id, a){
+  const f = document.createElement("iframe");
+  f.src = "https://drive.google.com/file/d/" + id + "/preview";
+  f.title = "العرض التعريفي: " + a.name;
+  f.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+  f.className = "drive-frame";
+  return f;
+}
 function renderVideo(i){
-  const a = ASSOC[i], v = parseVideo(a.video), box = $("vm-player");
+  const a = ASSOC[i], src = a.video || a.videoLink, v = parseVideo(src), box = $("vm-player");
   box.innerHTML = "";
   if (v.type === "none"){
     box.appendChild(fallbackBlock(a, "سيُتاح العرض التعريفي لهذه الجهة قريبًا."));
+  } else if (v.type === "drive" && allowEmbeds){
+    // Stream the original file into the browser's own player (no Drive overlay on top of the picture).
+    // If Drive refuses (quota, unsupported format), switch to Drive's embedded player instead.
+    const vid = document.createElement("video");
+    vid.controls = true; vid.playsInline = true; vid.preload = "metadata";
+    vid.src = "https://drive.usercontent.google.com/download?id=" + v.id + "&export=download&confirm=t#t=0.1";
+    vid.setAttribute("aria-label", "العرض التعريفي: " + a.name);
+    vid.addEventListener("error", () => { box.innerHTML = ""; box.appendChild(drivePlayer(v.id, a)); }, {once:true});
+    box.appendChild(vid);
   } else if (v.type === "file"){
     const vid = document.createElement("video");
-    vid.controls = true; vid.playsInline = true; vid.preload = "metadata"; vid.src = v.url;
+    vid.controls = true; vid.playsInline = true; vid.preload = "metadata"; vid.src = isExternal(v.url) ? v.url : v.url + "#t=0.1"; // #t shows the first frame on iPhone
     vid.setAttribute("aria-label", "العرض التعريفي: " + a.name);
-    vid.addEventListener("error", () => { box.innerHTML = ""; box.appendChild(fallbackBlock(a, "تعذّر تشغيل العرض داخل الصفحة.", isExternal(v.url) ? v.url : null, "فتح العرض في نافذة جديدة")); }, {once:true});
+    vid.addEventListener("error", () => { box.innerHTML = ""; const alt = a.videoLink || (isExternal(v.url) ? v.url : null); box.appendChild(fallbackBlock(a, "تعذّر تشغيل العرض داخل الصفحة.", alt, "مشاهدة العرض")); }, {once:true});
     box.appendChild(vid);
   } else if (allowEmbeds){
     const f = document.createElement("iframe");
@@ -802,8 +819,8 @@ function renderVideo(i){
   }
   const body = $("vm-body"); body.innerHTML = "";
   if (a.description){ const p = document.createElement("p"); p.textContent = a.description; body.appendChild(p); }
-  if (isExternal(a.video) && (v.type === "file" || allowEmbeds)){
-    const l = document.createElement("a"); l.className = "ext"; l.href = a.video; l.target = "_blank"; l.rel = "noopener"; l.textContent = coarse ? "مشاهدة بملء الشاشة" : "فتح العرض في نافذة جديدة"; body.appendChild(l);
+  if (isExternal(src) && (v.type === "file" || allowEmbeds)){
+    const l = document.createElement("a"); l.className = "ext"; l.href = src; l.target = "_blank"; l.rel = "noopener"; l.textContent = coarse ? "مشاهدة بملء الشاشة" : "فتح العرض في نافذة جديدة"; body.appendChild(l);
   }
   body.hidden = !body.childNodes.length;
 }
